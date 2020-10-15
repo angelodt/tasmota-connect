@@ -1,7 +1,7 @@
 /**
  *  Tasmota (Connect)
  *
- *  Copyright 2020 AwfullySmart.com - HongTat Tan
+ *  Copyright 2020 angelodt - Angelo Daiher
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,15 +16,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-String appVersion() { return "1.0.9" }
+String appVersion() { return "1.0.9a" }
 
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 definition(
-    name: "Tasmota (Connect)",
+    name: "Tasmota (Connect) ADTM",
     namespace: "hongtat",
-    author: "AwfullySmart",
+    author: "angelodt",
     description: "Allows you to integrate your Tasmota devices with SmartThings.",
     iconUrl: "https://awfullysmart.github.io/st/awfullysmart-180.png",
     iconX2Url: "https://awfullysmart.github.io/st/awfullysmart-180.png",
@@ -43,7 +43,7 @@ preferences {
 
 def mainPage() {
     if (state?.install) {
-        dynamicPage(name: "mainPage", title: "Tasmota (Connect) - v${appVersion()}") {
+        dynamicPage(name: "mainPage", title: "Tasmota (Connect) ADTM - v${appVersion()}") {
             section(){
                 href "addDevice", title:"New Tasmota Device", description:""
             }
@@ -144,6 +144,70 @@ def configureDevice(params){
                         title: "Health State",
                         description: "Mark device as Always Online",
                         defaultValue: false, required: false, submitOnChange: true)
+            }
+        }
+        
+        // Virtual Fan
+        if (moduleParameter && moduleParameter.settings.contains('virtualFan') && childSetting(state.currentId, "bridge") != null) {
+            section("RF Code") {
+                input("dev:${state.currentId}:command_on", "text",
+                        title: "Command to send for 'ON'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_off", "text",
+                        title: "Command to send for 'OFF'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+
+                input("dev:${state.currentId}:track_state", "bool",
+                        title: "State tracking",
+                        description: "Enable real-time tracking",
+                        defaultValue: false, required: false, submitOnChange: true)
+
+                if (childSetting(state.currentId, "track_state")) {
+                    input("dev:${state.currentId}:payload_on", "text",
+                        title: "Code that represents the 'ON' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_off", "text",
+                        title: "Code that represents the 'OFF' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                } else {
+                    deleteChildSetting(state.currentId, "payload_on")
+                    deleteChildSetting(state.currentId, "payload_off")
+                }
+            }
+        }
+        // Virtual Fan Light
+        if (moduleParameter && moduleParameter.settings.contains('virtualFanLight') && childSetting(state.currentId, "bridge") != null) {
+            section("RF Code") {
+                input("dev:${state.currentId}:command_on", "text",
+                        title: "Command to send for 'ON'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:command_off", "text",
+                        title: "Command to send for 'OFF'",
+                        description: "Tap to set",
+                        defaultValue: "", required: false, submitOnChange: true)
+                input("dev:${state.currentId}:track_state", "bool",
+                        title: "State tracking",
+                        description: "Enable real-time tracking",
+                        defaultValue: false, required: false, submitOnChange: true)
+
+                if (childSetting(state.currentId, "track_state")) {
+                    input("dev:${state.currentId}:payload_on", "text",
+                        title: "Code that represents the 'ON' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                    input("dev:${state.currentId}:payload_off", "text",
+                        title: "Code that represents the 'OFF' state",
+                        description: "Tap to set",
+                        defaultValue: "", required: false)
+                } else {
+                    deleteChildSetting(state.currentId, "payload_on")
+                    deleteChildSetting(state.currentId, "payload_off")
+                }
             }
         }
         // Virtual Switch
@@ -584,6 +648,8 @@ Map moduleMap() {
         "1024": [name: "Generic Light (CCT)", type: "Tasmota CCT Light"],
         "1100": [name: "Virtual Switch", type: "Tasmota Virtual Switch"],
         "1101": [name: "Virtual Shade/Blind", type: "Tasmota Virtual Shade"],
+        "1102": [name: "Virtual Fan", type: "Tasmota Virtual Fan"],
+        "1103": [name: "Virtual Fan Light", type: "Tasmota Virtual Fan Light"],
         "1111": [name: "Virtual 1-button", type: "Tasmota Virtual 1 Button"],
         "1112": [name: "Virtual 2-button", type: "Tasmota Virtual 2 Button"],
         "1114": [name: "Virtual 4-button", type: "Tasmota Virtual 4 Button"],
@@ -610,7 +676,9 @@ Map moduleMap() {
         "Tasmota Virtual 2 Button":        [channel: 2, messaging: true,    virtual: true,  child: false, settings: ["virtualButton", "bridge"]],
         "Tasmota Virtual 4 Button":        [channel: 4, messaging: true,    virtual: true,  child: false, settings: ["virtualButton", "bridge"]],
         "Tasmota Virtual 6 Button":        [channel: 6, messaging: true,    virtual: true,  child: false, settings: ["virtualButton", "bridge"]],
-        "Tasmota Virtual Air Conditioner": [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualAircon", "bridge"]]
+        "Tasmota Virtual Air Conditioner": [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualAircon", "bridge"]],
+        "Tasmota Virtual Fan":             [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualFan", "bridge"]],
+        "Tasmota Virtual Fan Light":       [channel: 1, messaging: true,    virtual: true,  child: false, settings: ["virtualFanLight", "bridge"]]
     ]
     Map modules = [:]
     customModule.each { k,v ->
@@ -692,7 +760,7 @@ def deleteChildSetting(id, name=null) {
         }
     } else if (id && name==null) {
         // otherwise, delete everything
-        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac", "health_state"].each { n ->
+        ["ip", "username", "password", "bridge", "command_on", "command_off", "track_state", "payload_on", "payload_off", "off_delay", "command_open", "command_close", "command_pause", "payload_open", "payload_close", "payload_pause", "payload_active", "payload_inactive", "hvac", "health_state", "payload_fan_speed", "payload_fanlight_on", "payload_fanlight_off"].each { n ->
             app?.deleteSetting("dev:${id}:${n}" as String)
         }
         // button
